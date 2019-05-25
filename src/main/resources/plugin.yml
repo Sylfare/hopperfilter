@@ -1,0 +1,10 @@
+name: "HopperFilter"
+version: "${project.version}"
+api-version: "1.13"
+author: trophonix
+main: com.trophonix.hopperfilter.HopperFilterPlugin
+commands:
+  hopperfilter:
+    description: "Reload config"
+    usage: "rl"
+    permission: "hopperfilter.admin"

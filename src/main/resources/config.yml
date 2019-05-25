@@ -1,0 +1,10 @@
+#
+# HopperFilter by Trophonix
+#
+
+filterFlippedUp:
+  - "&3Filter is now &ainclusive"
+  - "&7&oFilter will allow through the displayed item."
+filterFlippedDown:
+  - "&3Filter is now &cexclusive"
+  - "&7&oFilter will allow through all other items."
