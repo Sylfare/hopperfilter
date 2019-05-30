@@ -1,14 +1,12 @@
 package com.trophonix.hopperfilter;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Rotation;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Hopper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
@@ -17,6 +15,7 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -74,35 +73,45 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
       ItemFrames.getHopperAttachedTo(frame).ifPresent(
-          block -> Bukkit.getScheduler().runTaskLater(this,
-            () -> {
+          block -> {
               Rotation newRot = frame.getRotation().rotateCounterClockwise() == Rotation.NONE ?
                                 Rotation.FLIPPED : Rotation.NONE;
               frame.setRotation(newRot);
               (newRot == Rotation.NONE ? filterFlippedUp : filterFlippedDown)
                   .send(event.getPlayer());
-            }, 1L));
+      });
     }
   }
 
   @EventHandler
   public void onHopperPickup(InventoryPickupItemEvent event) {
-    if (event.getInventory().getType() != InventoryType.HOPPER) return;
+    if (!(event.getInventory().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getInventory().getHolder();
     event.setCancelled(cancel(hopper, event.getItem().getItemStack()));
   }
 
   @EventHandler
   public void onHopperMove(InventoryMoveItemEvent event) {
+    if (event.getInitiator().getType() != InventoryType.HOPPER) return;
+    InventoryHolder holder = event.getInitiator().getHolder();
+    Location loc;
+    if (holder instanceof Hopper) {
+      loc = ((Hopper)holder).getBlock().getLocation();
+    } else if (holder instanceof HopperMinecart) {
+      loc = ((HopperMinecart)holder).getLocation();
+    } else {
+      return;
+    }
+    if (event.getInitiator().equals(event.getSource())) {
+      Block below = loc.getWorld().getBlockAt(loc.clone().add(0, -1, 0));
+      if (below.getType() == Material.HOPPER && ItemFrames.getAttachedItemFrames(below).size() > 0) {
+        event.setCancelled(!cancel((Hopper)below.getState(), event.getItem()));
+        return;
+      }
+    }
     if (!(event.getInitiator().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getInitiator().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
-    if (event.getInitiator().equals(event.getSource())) {
-      Block below = hopper.getWorld().getBlockAt(hopper.getLocation().clone().add(0, -1, 0));
-      if (below.getType() == Material.HOPPER && ItemFrames.getAttachedItemFrames(below).size() > 0) {
-        event.setCancelled(!cancel((Hopper)below.getState(), event.getItem()));
-      }
-    }
   }
 
   private boolean cancel(Hopper hopper, ItemStack item) {
