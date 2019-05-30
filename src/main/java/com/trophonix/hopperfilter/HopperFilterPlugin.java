@@ -94,7 +94,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler
   public void onHopperMove(InventoryMoveItemEvent event) {
-    if (event.getInitiator().getType() != InventoryType.HOPPER) return;
+    if (!(event.getInitiator().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getInitiator().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
     if (event.getInitiator().equals(event.getSource())) {
