@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -69,16 +70,19 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
   }
 
   @EventHandler
-  public void onFrameRightClick(PlayerInteractAtEntityEvent event) {
+  public void onFrameRightClick(PlayerInteractEntityEvent event) {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
       ItemFrames.getHopperAttachedTo(frame).ifPresent(
           block -> {
-              Rotation newRot = frame.getRotation().rotateCounterClockwise() == Rotation.NONE ?
-                                Rotation.FLIPPED : Rotation.NONE;
+            event.setCancelled(true);
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+              Rotation newRot = frame.getRotation() == Rotation.NONE ?
+                                    Rotation.FLIPPED : Rotation.NONE;
               frame.setRotation(newRot);
               (newRot == Rotation.NONE ? filterFlippedUp : filterFlippedDown)
                   .send(event.getPlayer());
+            }, 1L);
       });
     }
   }
@@ -109,7 +113,6 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
         return;
       }
     }
-    if (!(event.getInitiator().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getInitiator().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
   }
