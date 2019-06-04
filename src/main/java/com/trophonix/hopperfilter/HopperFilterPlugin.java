@@ -14,9 +14,7 @@ import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -73,7 +71,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
   public void onFrameRightClick(PlayerInteractEntityEvent event) {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
-      ItemFrames.getHopperAttachedTo(frame).ifPresent(
+      if (!frame.getItem().getType().equals(Material.AIR)) ItemFrames.getHopperAttachedTo(frame).ifPresent(
           block -> {
             event.setCancelled(true);
             Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -97,32 +95,16 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
   @EventHandler
   public void onHopperMove(InventoryMoveItemEvent event) {
     if (event.getInitiator().getType() != InventoryType.HOPPER) return;
-    InventoryHolder holder = event.getInitiator().getHolder();
-    Location loc;
-    if (holder instanceof Hopper) {
-      loc = ((Hopper)holder).getBlock().getLocation();
-    } else if (holder instanceof HopperMinecart) {
-      loc = ((HopperMinecart)holder).getLocation();
-    } else {
-      return;
-    }
-    if (event.getInitiator().equals(event.getSource())) {
-      Block below = loc.getWorld().getBlockAt(loc.clone().add(0, -1, 0));
-      if (below.getType() == Material.HOPPER && ItemFrames.getAttachedItemFrames(below).size() > 0) {
-        event.setCancelled(!cancel((Hopper)below.getState(), event.getItem()));
-        return;
-      }
-    }
     Hopper hopper = (Hopper)event.getInitiator().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
   }
 
   private boolean cancel(Hopper hopper, ItemStack item) {
     if (hopper == null) return false;
-    boolean inverted = true;
+    boolean exclusive = true;
     for (ItemFrame frame : ItemFrames.getAttachedItemFrames(hopper.getBlock())) {
       if (frame.getRotation() == Rotation.NONE) {
-        inverted = false;
+        exclusive = false;
         if (frame.getItem().isSimilar(item)) {
           return false;
         }
@@ -132,7 +114,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
         }
       }
     }
-    return !inverted;
+    return !exclusive;
   }
 
 }
