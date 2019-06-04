@@ -1,12 +1,11 @@
 package com.trophonix.hopperfilter;
 
+import com.trophonix.hopperfilter.util.Hands;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.block.Hopper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntitySpawnEvent;
@@ -21,6 +20,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 
 public class HopperFilterPlugin extends JavaPlugin implements Listener {
+
+  private static boolean hands1_9;
+
+  static {
+    try {
+      Class<?> c = Class.forName("org.bukkit.event.player.PlayerInteractEntityEvent");
+      c.getMethod("getHand");
+      hands1_9 = true;
+    } catch (ReflectiveOperationException ignored) {
+      hands1_9 = false;
+    }
+  }
 
   private ConfigMessage filterFlippedUp;
   private ConfigMessage filterFlippedDown;
@@ -71,6 +82,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
   public void onFrameRightClick(PlayerInteractEntityEvent event) {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
+      if (hands1_9 && !Hands.isMainHand(event)) return;
       if (!frame.getItem().getType().equals(Material.AIR)) ItemFrames.getHopperAttachedTo(frame).ifPresent(
           block -> {
             event.setCancelled(true);
