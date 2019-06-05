@@ -7,9 +7,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -62,8 +63,8 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     return super.onTabComplete(sender, command, alias, args);
   }
 
-  @EventHandler
-  public void onItemFrameSpawn(EntitySpawnEvent event) {
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onItemFrameSpawn(HangingPlaceEvent event) {
     if (event.getEntity() instanceof ItemFrame) {
       Bukkit.getScheduler().runTaskLater(this, () ->
           ItemFrames.getHopperAttachedTo((ItemFrame)event.getEntity()).ifPresent(b ->
@@ -71,14 +72,14 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     }
   }
 
-  @EventHandler
+  @EventHandler (priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onItemFrameBreak(HangingBreakEvent event) {
     if (event.getEntity() instanceof ItemFrame) {
-      ItemFrames.removeAttachedItemFrame(event.getEntity().getLocation().getBlock(), (ItemFrame)event.getEntity());
+      ItemFrames.removeItemFrame((ItemFrame)event.getEntity());
     }
   }
 
-  @EventHandler
+  @EventHandler (priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onFrameRightClick(PlayerInteractEntityEvent event) {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
@@ -97,26 +98,30 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     }
   }
 
-  @EventHandler
+  @EventHandler (priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onHopperPickup(InventoryPickupItemEvent event) {
     if (!(event.getInventory().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getInventory().getHolder();
     event.setCancelled(cancel(hopper, event.getItem().getItemStack()));
   }
 
-  @EventHandler
+  @EventHandler (priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onHopperMove(InventoryMoveItemEvent event) {
-    if (event.getInitiator().getType() != InventoryType.HOPPER) return;
-    Hopper hopper = (Hopper)event.getInitiator().getHolder();
+    if (event.getDestination().getType() != InventoryType.HOPPER) return;
+    if (!(event.getDestination().getHolder() instanceof Hopper)) return;
+    Hopper hopper = (Hopper)event.getDestination().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
   }
 
   private boolean cancel(Hopper hopper, ItemStack item) {
     if (hopper == null) return false;
-    boolean exclusive = true;
-    for (ItemFrame frame : ItemFrames.getAttachedItemFrames(hopper.getBlock())) {
+    List<ItemFrame> frames = ItemFrames.getAttachedItemFrames(hopper.getBlock());
+    if (frames == null || frames.isEmpty()) return false;
+    boolean inclusive = false;
+    for (ItemFrame frame : frames) {
+      if (frame.getItem().getType().equals(Material.AIR)) continue;
       if (frame.getRotation() == Rotation.NONE) {
-        exclusive = false;
+        inclusive = true;
         if (frame.getItem().isSimilar(item)) {
           return false;
         }
@@ -126,7 +131,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
         }
       }
     }
-    return !exclusive;
+    return inclusive;
   }
 
 }

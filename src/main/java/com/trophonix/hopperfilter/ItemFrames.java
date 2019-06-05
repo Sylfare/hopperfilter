@@ -2,6 +2,7 @@ package com.trophonix.hopperfilter;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 
 import java.util.*;
@@ -38,6 +39,11 @@ public class ItemFrames {
       attached.remove(frame);
       attachedItemFrames.put(block, attached);
     }
+  }
+
+  static void removeItemFrame(ItemFrame frame) {
+    getHopperAttachedTo(frame).ifPresent(block ->
+        removeAttachedItemFrame(block, frame));
   }
 
   public static Optional<Block> getHopperAttachedTo(ItemFrame frame) {

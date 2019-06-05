@@ -6,5 +6,8 @@ main: com.trophonix.hopperfilter.HopperFilterPlugin
 commands:
   hopperfilter:
     description: "Reload config"
-    usage: "rl"
+    usage: "/hopperfilter rl"
     permission: "hopperfilter.admin"
+permissions:
+  hopperfilter.rotate:
+    description: "Gives player access to rotate a filter"
