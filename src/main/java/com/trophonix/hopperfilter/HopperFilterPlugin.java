@@ -1,6 +1,7 @@
 package com.trophonix.hopperfilter;
 
 import com.trophonix.hopperfilter.util.Hands;
+import com.trophonix.hopperfilter.util.Items;
 import org.bukkit.*;
 import org.bukkit.block.Hopper;
 import org.bukkit.command.Command;
@@ -13,7 +14,6 @@ import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -107,7 +107,6 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler (priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onHopperMove(InventoryMoveItemEvent event) {
-    if (event.getDestination().getType() != InventoryType.HOPPER) return;
     if (!(event.getDestination().getHolder() instanceof Hopper)) return;
     Hopper hopper = (Hopper)event.getDestination().getHolder();
     event.setCancelled(cancel(hopper, event.getItem()));
@@ -119,14 +118,15 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     if (frames == null || frames.isEmpty()) return false;
     boolean inclusive = false;
     for (ItemFrame frame : frames) {
-      if (frame.getItem().getType().equals(Material.AIR)) continue;
+      ItemStack fItem = frame.getItem();
+      if (fItem.getType().equals(Material.AIR)) continue;
       if (frame.getRotation() == Rotation.NONE) {
         inclusive = true;
-        if (frame.getItem().isSimilar(item)) {
+        if (Items.matchBroadly(fItem, item)) {
           return false;
         }
       } else if (frame.getRotation() == Rotation.FLIPPED) {
-        if (frame.getItem().isSimilar(item)) {
+        if (Items.matchBroadly(fItem, item)) {
           return true;
         }
       }
