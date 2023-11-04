@@ -1,6 +1,6 @@
 name: "HopperFilter"
 version: "${project.version}"
-api-version: "1.13"
+api-version: "1.20"
 author: trophonix
 main: com.trophonix.hopperfilter.HopperFilterPlugin
 commands:

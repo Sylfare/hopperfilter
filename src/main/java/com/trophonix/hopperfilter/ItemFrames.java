@@ -2,11 +2,9 @@ package com.trophonix.hopperfilter;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ItemFrames {
 
@@ -15,8 +13,8 @@ public class ItemFrames {
   static List<ItemFrame> findAttachedItemFrames(Block block) {
     if (block == null) return new ArrayList<>();
     List<ItemFrame> attached = block.getWorld().getNearbyEntities(block.getLocation(), 2, 2, 2).stream()
-               .filter(f -> f instanceof ItemFrame).map(ItemFrame.class::cast)
-               .filter(f -> block.equals(getHopperAttachedTo(f).orElse(null))).collect(Collectors.toList());
+              .filter(f -> f instanceof ItemFrame).map(ItemFrame.class::cast)
+              .filter(f -> block.equals(getHopperAttachedTo(f).orElse(null))).toList();
     attachedItemFrames.put(block, attached);
     return attached;
   }

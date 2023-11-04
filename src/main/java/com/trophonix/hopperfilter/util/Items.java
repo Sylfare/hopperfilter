@@ -13,10 +13,10 @@ public class Items {
       assert bM != null;
       assert oM != null;
       if (!bM.hasDisplayName()) {
-        oM.setDisplayName(null);
+        oM.displayName(null);
       }
       if (!bM.hasLore()) {
-        oM.setLore(null);
+        oM.lore(null);
       }
     }
     return base.isSimilar(other);
