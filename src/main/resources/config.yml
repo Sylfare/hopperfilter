@@ -3,8 +3,8 @@
 #
 
 filterFlippedUp:
-  - "&3Filter is now &ainclusive"
-  - "&7&oFilter will allow through the displayed item."
+  - "<dark_aqua>Filter is now</dark_aqua> <green>inclusive</green>"
+  - "<gray><italic>Filter will allow through the displayed item.</italic></gray>"
 filterFlippedDown:
-  - "&3Filter is now &cexclusive"
-  - "&7&oFilter will allow through all other items."
+  - "<dark_aqua>Filter is now</dark_aqua> <red>exclusive</red>"
+  - "<gray><italic>Filter will allow through all other items.</italic></gray>"

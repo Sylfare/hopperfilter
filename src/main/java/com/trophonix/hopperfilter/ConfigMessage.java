@@ -1,50 +1,50 @@
 package com.trophonix.hopperfilter;
 
-import org.bukkit.ChatColor;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.stream.Collectors;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class ConfigMessage {
 
-  private String[] message;
+  private MiniMessage miniMessage = MiniMessage.miniMessage();
 
-  public ConfigMessage(ConfigurationSection config, String location, String... defaultMessage) {
-    if (config.isString(location)) {
-      this.message = new String[]{colorize(Objects.requireNonNull(config.getString(location)))};
-    } else if (config.isList(location)) {
-      List<String> message = config.getStringList(location);
-      for (int i = 0; i < message.size(); i++) {
-        message.set(i, colorize(message.get(i)));
-      }
-      this.message = message.toArray(new String[0]);
-    } else this.message = defaultMessage;
-    for (int i = 0; i < this.message.length; i++) {
-      String line = this.message[i];
-      if (line == null || line.isEmpty()) continue;
-      this.message[i] = colorize(line);
+  private Component message;
+
+  public ConfigMessage(ConfigurationSection config, @NotNull String location, Component defaultMessage) {
+    String serializedMessage;
+    if(config.isList(location)){
+      serializedMessage = config.getList(location).stream().map(Object::toString).collect(Collectors.joining("<newline>"));
+    } else {
+      serializedMessage = config.getString(location, "");
     }
+
+
+    this.message = miniMessage.deserialize(serializedMessage);
+    
   }
 
-  public void send(CommandSender receiver, String... placeholders) {
-    receiver.sendMessage(Arrays.stream(this.message).map(str -> {
-      for (int i = 0; i < placeholders.length - 1; i += 2) {
-        str = str.replace(placeholders[i], placeholders[i + 1]);
-      }
-      return str;
-    }).toArray(String[]::new));
+  public ConfigMessage(FileConfiguration config, String location) {
+    this(config, location, Component.text(""));
   }
 
-  public void send(Collection<? extends CommandSender> receivers, String... placeholders) {
+  public void send(CommandSender receiver) {
+    this.send(receiver, null);
+  }
+
+  public void send(CommandSender receiver, Dictionary<String,String> placeholders) {
+    // placeholders does not seem to be used yet
+    receiver.sendMessage(message);
+  }
+
+  public void send(Collection<? extends CommandSender> receivers, Dictionary<String,String> placeholders) {
     receivers.forEach(receiver -> send(receiver, placeholders));
   }
-
-  private static String colorize(String string) {
-    return ChatColor.translateAlternateColorCodes('&', string);
-  }
-
 }

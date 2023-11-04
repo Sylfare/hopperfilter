@@ -1,8 +1,10 @@
 package com.trophonix.hopperfilter;
 
-import com.trophonix.hopperfilter.util.Hands;
-import com.trophonix.hopperfilter.util.Items;
-import org.bukkit.*;
+import java.util.List;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.Rotation;
 import org.bukkit.block.Hopper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,24 +17,16 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
+import com.trophonix.hopperfilter.util.Items;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class HopperFilterPlugin extends JavaPlugin implements Listener {
-
-  private static boolean hands1_9;
-
-  static {
-    try {
-      Class<?> c = Class.forName("org.bukkit.event.player.PlayerInteractEntityEvent");
-      c.getMethod("getHand");
-      hands1_9 = true;
-    } catch (ReflectiveOperationException ignored) {
-      hands1_9 = false;
-    }
-  }
 
   private ConfigMessage filterFlippedUp;
   private ConfigMessage filterFlippedDown;
@@ -53,7 +47,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
     if (args.length > 0 && (args[0].equalsIgnoreCase("rl") || args[0].equalsIgnoreCase("reload"))) {
       reloadConfig();
       load();
-      sender.sendMessage(ChatColor.GREEN + "Reloaded config.");
+      sender.sendMessage(Component.text("Reloaded config.", NamedTextColor.GREEN));
       return true;
     }
     return false;
@@ -83,7 +77,7 @@ public class HopperFilterPlugin extends JavaPlugin implements Listener {
   public void onFrameRightClick(PlayerInteractEntityEvent event) {
     if (event.getRightClicked() instanceof ItemFrame) {
       ItemFrame frame = (ItemFrame) event.getRightClicked();
-      if (hands1_9 && !Hands.isMainHand(event)) return;
+      if (event.getHand() != EquipmentSlot.HAND) return;
       if (!frame.getItem().getType().equals(Material.AIR)) ItemFrames.getHopperAttachedTo(frame).ifPresent(
           block -> {
             event.setCancelled(true);
