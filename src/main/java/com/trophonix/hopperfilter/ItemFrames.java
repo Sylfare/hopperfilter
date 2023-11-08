@@ -1,10 +1,17 @@
 package com.trophonix.hopperfilter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.bukkit.Material;
+import org.bukkit.Rotation;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemFrame;
-
-import java.util.*;
+import org.bukkit.inventory.ItemStack;
 
 public class ItemFrames {
 
@@ -14,7 +21,7 @@ public class ItemFrames {
     if (block == null) return new ArrayList<>();
     List<ItemFrame> attached = block.getWorld().getNearbyEntities(block.getLocation(), 2, 2, 2).stream()
               .filter(f -> f instanceof ItemFrame).map(ItemFrame.class::cast)
-              .filter(f -> block.equals(getHopperAttachedTo(f).orElse(null))).toList();
+              .filter(f -> block.equals(getHopperAttachedTo(f).orElse(null))).collect(Collectors.toList());
     attachedItemFrames.put(block, attached);
     return attached;
   }
@@ -22,6 +29,15 @@ public class ItemFrames {
   static List<ItemFrame> getAttachedItemFrames(Block block) {
     List<ItemFrame> attached = attachedItemFrames.get(block);
     return attached != null ? attached : findAttachedItemFrames(block);
+  }
+
+  static boolean isFilterInverted(ItemFrame itemFrame) {
+    return itemFrame.getRotation() == Rotation.FLIPPED;
+  }
+  static HashMap<ItemStack, Boolean> getAttachedFilters(Block block) {
+    return (HashMap<ItemStack, Boolean>) getAttachedItemFrames(block).stream()
+      .filter(itemFrame -> itemFrame.getItem().getType() != Material.AIR)
+      .collect(Collectors.toMap(ItemFrame::getItem, ItemFrames::isFilterInverted));
   }
 
   static void addAttachedItemFrame(Block block, ItemFrame frame) {
